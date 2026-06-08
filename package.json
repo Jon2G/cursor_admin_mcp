@@ -1,0 +1,33 @@
+{
+  "name": "cursor_admin_mcp",
+  "version": "1.0.0",
+  "description": "Secure MCP server requiring UI approval for admin PowerShell commands",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jon2G/cursor_admin_mcp.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Jon2G/cursor_admin_mcp/issues"
+  },
+  "homepage": "https://github.com/Jon2G/cursor_admin_mcp#readme",
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0-alpha.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.2",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}

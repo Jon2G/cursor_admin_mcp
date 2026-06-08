@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+
+      - name: Read package version
+        id: version
+        run: echo "version=$(node -p "JSON.parse(require('node:fs').readFileSync('package.json','utf8')).version")" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release tag already exists
+        id: tag
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag $TAG already exists. Bump version in package.json before merging to main."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release archive
+        if: steps.tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          STAGING="release-artifact"
+          mkdir -p "$STAGING/dist"
+          cp -r dist/* "$STAGING/dist/"
+          cp package.json README.md LICENSE "$STAGING/"
+          (cd "$STAGING" && zip -r "../cursor_admin_mcp-${VERSION}.zip" .)
+
+      - name: Create GitHub release
+        if: steps.tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
+          generate_release_notes: true
+          files: cursor_admin_mcp-${{ steps.version.outputs.version }}.zip
