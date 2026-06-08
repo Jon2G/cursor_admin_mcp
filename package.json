@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/Jon2G/cursor_admin_mcp#readme",
   "dependencies": {
+    "@cfworker/json-schema": "^4.1.1",
     "@modelcontextprotocol/server": "^2.0.0-alpha.2",
     "zod": "^4.4.3"
   },
