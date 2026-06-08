@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { assertWindows, isWindows } from "../src/platform.js";
+import {
+  assertLinux,
+  assertWindows,
+  isLinux,
+  isWindows,
+} from "../src/platform.js";
 
 describe("platform", () => {
   const originalPlatform = process.platform;
@@ -30,5 +35,27 @@ describe("platform", () => {
   it("assertWindows does not throw on win32", () => {
     Object.defineProperty(process, "platform", { value: "win32" });
     expect(() => assertWindows()).not.toThrow();
+  });
+
+  it("isLinux returns true on linux", () => {
+    Object.defineProperty(process, "platform", { value: "linux" });
+    expect(isLinux()).toBe(true);
+  });
+
+  it("isLinux returns false on non-linux", () => {
+    Object.defineProperty(process, "platform", { value: "win32" });
+    expect(isLinux()).toBe(false);
+  });
+
+  it("assertLinux throws on non-linux", () => {
+    Object.defineProperty(process, "platform", { value: "win32" });
+    expect(() => assertLinux()).toThrow(
+      "run_as_root is only supported on Linux. Current platform: win32"
+    );
+  });
+
+  it("assertLinux does not throw on linux", () => {
+    Object.defineProperty(process, "platform", { value: "linux" });
+    expect(() => assertLinux()).not.toThrow();
   });
 });

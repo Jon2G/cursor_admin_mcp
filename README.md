@@ -1,25 +1,60 @@
 # cursor_admin_mcp
 
-Secure Windows MCP server that exposes a `run_as_admin` tool for Cursor agents. Every elevated PowerShell command requires explicit visual user approval via a native WPF dialog before UAC elevation runs.
+Cross-platform secure MCP server for Cursor agents. Exposes elevated execution tools with mandatory human approval before privilege escalation:
+
+- **Windows:** `run_as_admin` — PowerShell with WPF approval dialog and UAC
+- **Linux:** `run_as_root` — bash with zenity approval dialog and `sudo`
 
 ## Requirements
 
-- Windows 10 or later
+### All platforms
+
 - Node.js 20 or later
+
+### Windows (`run_as_admin`)
+
+- Windows 10 or later
 - Windows PowerShell 5.1 (default `powershell` on Windows)
 - WPF (`PresentationFramework`) for the approval dialog
 
+### Linux (`run_as_root`)
+
+- bash
+- `sudo` (user must have sudo privileges)
+- `zenity` for approval and password dialogs
+- `DISPLAY` or `WAYLAND_DISPLAY` set (GUI session required)
+
+Install example (Debian/Ubuntu):
+
+```bash
+sudo apt install zenity
+```
+
 ## Security model
 
-1. The agent sends a PowerShell command string to `run_as_admin`.
-2. The server writes the command to an isolated temporary `.ps1` file (no inline string execution).
+Both tools follow the same pattern: payload isolation, visual approval, privilege escalation, log capture, cleanup.
+
+### Windows — `run_as_admin`
+
+1. The agent sends a PowerShell command string.
+2. The server writes the command to an isolated temporary `.ps1` file.
 3. A wrapper script shows a WPF `MessageBox` with the **exact** command payload.
-4. If the user clicks **Yes**, Windows UAC prompts for elevation and the payload runs elevated.
+4. If the user clicks **Yes**, UAC prompts for elevation and the payload runs elevated.
 5. If the user clicks **No**, execution stops and the tool returns `Execution denied by user.`
 6. stdout/stderr are captured to a temporary log file and returned to the agent.
 7. All temporary files are deleted after each invocation.
 
-The agent cannot bypass approval or UAC. This server is **Windows-only**.
+### Linux — `run_as_root`
+
+1. The agent sends a bash command string.
+2. The server writes the command to an isolated temporary `.sh` file.
+3. A wrapper script shows a **zenity** question dialog with the **exact** command payload.
+4. If the user clicks **Yes**, `sudo -A` runs the payload using a temporary `SUDO_ASKPASS` script (`zenity --password`).
+5. If the user clicks **No**, execution stops and the tool returns `Execution denied by user.`
+6. stdout/stderr are captured to a temporary log file and returned to the agent.
+7. All temporary files are deleted after each invocation.
+
+The agent cannot bypass approval or elevation on either platform. Use the tool that matches the current OS.
 
 ## Build and run
 
@@ -73,9 +108,13 @@ Add this server in **Cursor → Settings → Features → MCP Servers** (adjust 
 }
 ```
 
+On Linux, use the appropriate absolute path to `dist/index.js`.
+
 After changing MCP settings, reload MCP servers in Cursor.
 
 ## Manual smoke test
+
+### Windows
 
 1. Build the project: `npm run build`
 2. Register the MCP server in Cursor using the config above.
@@ -83,7 +122,19 @@ After changing MCP settings, reload MCP servers in Cursor.
 4. Confirm the WPF dialog shows the exact command.
 5. Click **Yes**, approve UAC, and verify output contains `hello`.
 6. Run again and click **No** — verify the tool returns `Execution denied by user.` without a UAC prompt.
-7. Confirm no leftover `mcp_payload_*`, `mcp_wrapper_*`, or `mcp_output_*` files remain under `%TEMP%`.
+7. Confirm no leftover temp files remain under `%TEMP%`.
+
+### Linux
+
+1. Build the project: `npm run build`
+2. Register the MCP server in Cursor.
+3. Ask the agent to call `run_as_root` with: `echo "hello"`
+4. Confirm the zenity dialog shows the exact command.
+5. Click **Yes**, enter your sudo password in the zenity prompt, and verify output contains `hello`.
+6. Run again and click **No** — verify the tool returns `Execution denied by user.` without a sudo prompt.
+7. Confirm no leftover temp files remain under `/tmp`.
+
+Calling `run_as_admin` on Linux or `run_as_root` on Windows returns a clear platform error without elevation.
 
 ## SDK note
 

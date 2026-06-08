@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildWrapperInvocation,
   buildWrapperScript,
-} from "../src/powershellScripts.js";
+} from "../src/windows/powershellScripts.js";
 
 describe("powershellScripts", () => {
   it("buildWrapperScript includes param block and LiteralPath usage", () => {
