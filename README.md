@@ -3,7 +3,7 @@
 Cross-platform secure MCP server for Cursor agents. Exposes elevated execution tools with mandatory human approval before privilege escalation:
 
 - **Windows:** `run_as_admin` — PowerShell with WPF approval dialog and UAC
-- **Linux:** `run_as_root` — bash with zenity approval dialog and `sudo`
+- **Linux / macOS:** `run_as_root` — bash with approval dialog and `sudo`
 
 ## Requirements
 
@@ -30,6 +30,13 @@ Install example (Debian/Ubuntu):
 sudo apt install zenity
 ```
 
+### macOS (`run_as_root`)
+
+- bash
+- `sudo` (user must be an administrator)
+- `osascript` for approval and password dialogs (built into macOS)
+- GUI session required (osascript dialogs)
+
 ## Security model
 
 Both tools follow the same pattern: payload isolation, visual approval, privilege escalation, log capture, cleanup.
@@ -54,7 +61,17 @@ Both tools follow the same pattern: payload isolation, visual approval, privileg
 6. stdout/stderr are captured to a temporary log file and returned to the agent.
 7. All temporary files are deleted after each invocation.
 
-The agent cannot bypass approval or elevation on either platform. Use the tool that matches the current OS.
+### macOS — `run_as_root`
+
+1. The agent sends a bash command string.
+2. The server writes the command to an isolated temporary `.sh` file.
+3. A wrapper script shows an **osascript** dialog with the **exact** command payload.
+4. If the user clicks **Yes**, `sudo -A` runs the payload using a temporary `SUDO_ASKPASS` script (osascript hidden-password dialog).
+5. If the user clicks **No**, execution stops and the tool returns `Execution denied by user.`
+6. stdout/stderr are captured to a temporary log file and returned to the agent.
+7. All temporary files are deleted after each invocation.
+
+The agent cannot bypass approval or elevation on any platform. Use the tool that matches the current OS.
 
 ## Build and run
 
@@ -108,7 +125,7 @@ Add this server in **Cursor → Settings → Features → MCP Servers** (adjust 
 }
 ```
 
-On Linux, use the appropriate absolute path to `dist/index.js`.
+On Linux and macOS, use the appropriate absolute path to `dist/index.js`.
 
 After changing MCP settings, reload MCP servers in Cursor.
 
@@ -134,7 +151,17 @@ After changing MCP settings, reload MCP servers in Cursor.
 6. Run again and click **No** — verify the tool returns `Execution denied by user.` without a sudo prompt.
 7. Confirm no leftover temp files remain under `/tmp`.
 
-Calling `run_as_admin` on Linux or `run_as_root` on Windows returns a clear platform error without elevation.
+### macOS
+
+1. Build the project: `npm run build`
+2. Register the MCP server in Cursor.
+3. Ask the agent to call `run_as_root` with: `echo "hello"`
+4. Confirm the osascript dialog shows the exact command.
+5. Click **Yes**, enter your administrator password in the osascript prompt, and verify output contains `hello`.
+6. Run again and click **No** — verify the tool returns `Execution denied by user.` without a sudo prompt.
+7. Confirm no leftover temp files remain under `$TMPDIR`.
+
+Calling `run_as_admin` on Linux or macOS, or `run_as_root` on Windows, returns a clear platform error without elevation.
 
 ## SDK note
 

@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   assertLinux,
+  assertMacOS,
   assertWindows,
   isLinux,
+  isMacOS,
   isWindows,
 } from "../src/platform.js";
 
@@ -57,5 +59,27 @@ describe("platform", () => {
   it("assertLinux does not throw on linux", () => {
     Object.defineProperty(process, "platform", { value: "linux" });
     expect(() => assertLinux()).not.toThrow();
+  });
+
+  it("isMacOS returns true on darwin", () => {
+    Object.defineProperty(process, "platform", { value: "darwin" });
+    expect(isMacOS()).toBe(true);
+  });
+
+  it("isMacOS returns false on non-darwin", () => {
+    Object.defineProperty(process, "platform", { value: "linux" });
+    expect(isMacOS()).toBe(false);
+  });
+
+  it("assertMacOS throws on non-darwin", () => {
+    Object.defineProperty(process, "platform", { value: "linux" });
+    expect(() => assertMacOS()).toThrow(
+      "run_as_root is only supported on macOS (darwin). Current platform: linux"
+    );
+  });
+
+  it("assertMacOS does not throw on darwin", () => {
+    Object.defineProperty(process, "platform", { value: "darwin" });
+    expect(() => assertMacOS()).not.toThrow();
   });
 });

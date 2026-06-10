@@ -1,13 +1,13 @@
 import { McpServer, StdioServerTransport } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
-import { runAsRoot } from "./linux/runAsRoot.js";
+import { runAsRoot } from "./runAsRoot.js";
 import { runAsAdmin } from "./runAsAdmin.js";
 
 const server = new McpServer(
-  { name: "secure-admin-mcp", version: "1.1.0" },
+  { name: "secure-admin-mcp", version: "1.2.0" },
   {
     instructions:
-      "Cross-platform elevated execution with mandatory user approval. On Windows use run_as_admin (PowerShell + UAC). On Linux use run_as_root (bash + sudo). Never assume approval.",
+      "Cross-platform elevated execution with mandatory user approval. On Windows use run_as_admin (PowerShell + UAC). On Linux and macOS use run_as_root (bash + sudo). Never assume approval.",
   }
 );
 
@@ -27,7 +27,7 @@ server.registerTool(
   "run_as_root",
   {
     description:
-      "Linux only. Executes a bash command as root after visual user approval and sudo authentication.",
+      "Linux and macOS. Executes a bash command as root after visual user approval and sudo authentication.",
     inputSchema: z.object({
       command: z.string().describe("Bash command or script to execute as root."),
     }),

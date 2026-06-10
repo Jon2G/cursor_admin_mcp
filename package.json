@@ -1,7 +1,7 @@
 {
   "name": "cursor_admin_mcp",
-  "version": "1.1.0",
-  "description": "Secure MCP server requiring UI approval for elevated commands on Windows and Linux",
+  "version": "1.2.0",
+  "description": "Secure MCP server requiring UI approval for elevated commands on Windows, Linux, and macOS",
   "type": "module",
   "engines": {
     "node": ">=20"
