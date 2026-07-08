@@ -1,5 +1,7 @@
 # cursor_admin_mcp
 
+[![cursor_admin_mcp MCP server](https://glama.ai/mcp/servers/Jon2G/cursor_admin_mcp/badges/score.svg)](https://glama.ai/mcp/servers/Jon2G/cursor_admin_mcp)
+
 Cross-platform secure MCP server for Cursor agents. Exposes elevated execution tools with mandatory human approval before privilege escalation:
 
 - **Windows:** `run_as_admin` — PowerShell with WPF approval dialog and UAC
